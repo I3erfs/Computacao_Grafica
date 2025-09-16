@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cabeça do Robô — WebGL (exemplo)</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #222;
+      color: #ddd;
+      font-family: Arial, sans-serif;
+    }
+    canvas {
+      border: 1px solid #666;
+      image-rendering: crisp-edges;
+    }
+    .info {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.4);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="info">Cabeça do Robô — abra o console se não aparecer (F12)</div>
+  <canvas id="meuCanvas" width="800" height="600"></canvas>
+
+  <script>
+  // Helpers: compila shader e cria programa
+  function compileShader(gl, type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      const info = gl.getShaderInfoLog(shader);
+      gl.deleteShader(shader);
+      throw new Error('Erro compilando shader: ' + info);
+    }
+    return shader;
+  }
+
+  function createProgram(gl, vsSource, fsSource) {
+    const vs = compileShader(gl, gl.VERTEX_SHADER, vsSource);
+    const fs = compileShader(gl, gl.FRAGMENT_SHADER, fsSource);
+    const program = gl.createProgram();
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      const info = gl.getProgramInfoLog(program);
+      gl.deleteProgram(program);
+      throw new Error('Erro linkando programa: ' + info);
+    }
+    return program;
+  }
+
+  // Shaders simples: posição (vec2) -> cor por uniform
+  const vertexShaderSource = `
+    attribute vec2 a_position;
+    void main() {
+      gl_Position = vec4(a_position, 0.0, 1.0);
+    }
+  `;
+  const fragmentShaderSource = `
+    precision mediump float;
+    uniform vec4 u_color;
+    void main() {
+      gl_FragColor = u_color;
+    }
+  `;
+
+  // setup WebGL
+  const canvas = document.getElementById('meuCanvas');
+  const gl = canvas.getContext('webgl');
+  if (!gl) {
+    console.error('WebGL não suportado neste navegador.');
+    alert('WebGL não suportado — use Chrome/Firefox atualizados com aceleração de hardware habilitada.');
+    throw new Error('WebGL not supported');
+  }
+
+  // cria programa
+  const program = createProgram(gl, vertexShaderSource, fragmentShaderSource);
+  gl.useProgram(program);
+
+  // localização de atributos/uniforms
+  const posLoc = gl.getAttribLocation(program, 'a_position');
+  const colorLoc = gl.getUniformLocation(program, 'u_color');
+
+  // buffer reutilizável (vamos atualizar os dados para cada parte)
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+
+  // configura como ler os dados do atributo
+  gl.enableVertexAttribArray(posLoc);
+  gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+  // função para desenhar um retângulo (usando TRIANGLE_STRIP com 4 vértices)
+  function drawRect(x1, y1, x2, y2, color) {
+    // vertices: top-left, top-right, bottom-left, bottom-right
+    const verts = new Float32Array([
+      x1, y1,
+      x2, y1,
+      x1, y2,
+      x2, y2
+    ]);
+    gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
+    gl.uniform4fv(colorLoc, color);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+
+  // limpa e configura viewport
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  // --- Desenha a cabeça do robô (parte principal e olhos/boca) ---
+  // Cabeça (retângulo)
+  drawRect(-0.2, 0.8, 0.2, 0.5, new Float32Array([0.8, 0.8, 0.9, 1.0])); // cinza-claro
+
+  // Olhos (dois pequenos retângulos pretos)
+  drawRect(-0.12, 0.72, -0.02, 0.62, new Float32Array([0.0, 0.0, 0.0, 1.0])); // olho esquerdo
+  drawRect(0.02, 0.72, 0.12, 0.62,  new Float32Array([0.0, 0.0, 0.0, 1.0])); // olho direito
+
+  // Boca
+  drawRect(-0.08, 0.56, 0.08, 0.52, new Float32Array([0.6, 0.1, 0.1, 1.0])); // retângulo como boca
+
+  // (Opcional) detalhes: antena — desenhamos uma linha "grosseira" com pequeno retângulo
+  drawRect(-0.01, 0.85, 0.01, 0.92, new Float32Array([0.9, 0.8, 0.0, 1.0])); // antena
+  </script>
+</body>
+</html>
