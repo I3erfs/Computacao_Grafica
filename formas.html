@@ -35,7 +35,7 @@
   <canvas id="meuCanvas" width="800" height="600"></canvas>
 
   <script>
-  // Helpers: compila shader e cria programa
+  // Helpers (compila shader e cria programa)
   function compileShader(gl, type, source) {
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
@@ -91,11 +91,11 @@
   const program = createProgram(gl, vertexShaderSource, fragmentShaderSource);
   gl.useProgram(program);
 
-  // localização de atributos/uniforms
+  // localização de atributos
   const posLoc = gl.getAttribLocation(program, 'a_position');
   const colorLoc = gl.getUniformLocation(program, 'u_color');
 
-  // buffer reutilizável (vamos atualizar os dados para cada parte)
+  // buffer
   const buffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
@@ -103,9 +103,9 @@
   gl.enableVertexAttribArray(posLoc);
   gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
 
-  // função para desenhar um retângulo (usando TRIANGLE_STRIP com 4 vértices)
+  // função para desenhar um retângulo
   function drawRect(x1, y1, x2, y2, color) {
-    // vertices: top-left, top-right, bottom-left, bottom-right
+    // vertices
     const verts = new Float32Array([
       x1, y1,
       x2, y1,
@@ -122,8 +122,7 @@
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  // --- Desenha a cabeça do robô (parte principal e olhos/boca) ---
-  // Cabeça (retângulo)
+  // Cabeça 
   drawRect(-0.2, 0.8, 0.2, 0.5, new Float32Array([0.8, 0.8, 0.9, 1.0])); // cinza-claro
 
   // Olhos (dois pequenos retângulos pretos)
@@ -133,7 +132,7 @@
   // Boca
   drawRect(-0.08, 0.56, 0.08, 0.52, new Float32Array([0.6, 0.1, 0.1, 1.0])); // retângulo como boca
 
-  // (Opcional) detalhes: antena — desenhamos uma linha "grosseira" com pequeno retângulo
+  // Antena
   drawRect(-0.01, 0.85, 0.01, 0.92, new Float32Array([0.9, 0.8, 0.0, 1.0])); // antena
   </script>
 </body>
